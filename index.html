@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HỆ THỐNG PHÂN TÍCH & ĐỐI SOÁT DỮ LIỆU ĐỊA CHÍNH (XML & EXCEL)</title>
+    <!-- Thư viện nén ZIP & Xuất Excel siêu nhẹ -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #0056b3; /* Màu xanh dương chủ đạo */
+            --primary-hover: #004085;
+            --success-color: #107c41;
+            --warning-color: #ff9800;
+            --danger-color: #dc3545;
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --border-color: #dddddd;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1750px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 20px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            flex: 1;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-top: 5px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 1.6em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        /* TẬP HỢP TABS */
+        .nav-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .nav-tab {
+            padding: 12px 25px;
+            font-weight: bold;
+            font-size: 0.95em;
+            color: #555;
+            background: #e9ecef;
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            margin-right: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-tab:hover {
+            background: #dee2e6;
+        }
+
+        .nav-tab.active {
+            background: var(--primary-color);
+            color: #ffffff;
+            border-color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* KHU VỰC TẢI TỆP */
+        .upload-options {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .upload-area {
+            flex: 1;
+            border: 2px dashed var(--primary-color);
+            background: #f8fbff;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .upload-area:hover {
+            background: #e6f0fa;
+            border-color: var(--primary-hover);
+        }
+
+        .upload-area h3 {
+            margin-top: 0;
+            margin-bottom: 6px;
+            color: var(--primary-color);
+            font-size: 1.1em;
+        }
+
+        .upload-area p {
+            margin: 0;
+            color: #666;
+            font-size: 0.85em;
+        }
+
+        /* CÁC NÚT BẤM */
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 9px 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.2s;
+            font-size: 0.9em;
+        }
+
+        .btn:hover { background-color: var(--primary-hover); }
+        .btn-excel { background-color: var(--success-color); }
+        .btn-excel:hover { background-color: #0b592e; }
+        .btn-warning { background-color: var(--warning-color); }
+        .btn-danger { background-color: var(--danger-color); }
+
+        .summary-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #e9ecef;
+            padding: 10px 18px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .filter-panel {
+            background: #f1f5f9;
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .form-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 0.88em;
+        }
+
+        select, input[type="text"] {
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.88em;
+        }
+
+        /* BẢNG DỮ LIỆU */
+        .table-responsive {
+            overflow-x: auto;
+            max-height: 580px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85em;
+            white-space: nowrap;
+        }
+
+        table, th, td {
+            border: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            padding: 10px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 8px 10px;
+            text-align: left;
+        }
+
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        tr:hover { background-color: #e2e8f0; }
+
+        .badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.82em;
+        }
+        .badge-success { background-color: #d4edda; color: #155724; }
+        .badge-danger { background-color: #f8d7da; color: #721c24; }
+
+        .progress-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 18px;
+            background-color: var(--primary-color);
+            border-radius: 4px;
+            text-align: center;
+            color: white;
+            font-size: 0.78em;
+            line-height: 18px;
+            font-weight: bold;
+            transition: width 0.05s linear;
+        }
+
+        footer {
+            text-align: center;
+            padding: 12px;
+            margin-top: 15px;
+            font-size: 0.85em;
+            color: #555;
+            border-top: 1px solid var(--border-color);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>PHÂN TÍCH & ĐỐI SOÁT DỮ LIỆU ĐỊA CHÍNH</h1>
+    <div class="subtitle">Hệ thống xử lý đa tầng: Bóc tách XML và Đối soát lọc tệp Excel dữ liệu</div>
+
+    <!-- THANH ĐIỀU HƯỚNG TABS -->
+    <div class="nav-tabs">
+        <div class="nav-tab active" onclick="switchTab('tab1')">📁 Tab 1: Quét dữ liệu thư mục (XML)</div>
+        <div class="nav-tab" onclick="switchTab('tab2')">🔍 Tab 2: Đối soát & Lọc tệp dữ liệu</div>
+    </div>
+
+    <!-- TAB 1: QUÉT DỮ LIỆU THƯ MỤC -->
+    <div id="tab1" class="tab-content active">
+        <div class="upload-options">
+            <div class="upload-area" onclick="document.getElementById('folderInput1').click()">
+                <h3>📁 Chọn THƯ MỤC chứa tệp XML</h3>
+                <p>Tự động quét toàn bộ thư mục & hàng nghìn thư mục con (Không giới hạn)</p>
+                <input type="file" id="folderInput1" webkitdirectory directory multiple style="display: none;">
+            </div>
+            <div class="upload-area" onclick="document.getElementById('fileInput1').click()">
+                <h3>📄 Chọn nhiều TỆP XML trực tiếp</h3>
+                <p>Hỗ trợ chọn hàng vạn tệp XML cùng lúc an toàn bộ nhớ</p>
+                <input type="file" id="fileInput1" multiple accept=".xml" style="display: none;">
+            </div>
+        </div>
+
+        <div id="mainSection1" style="display: none;">
+            <div class="summary-bar">
+                <span>Tổng số file XML đã quét: <strong id="totalFiles1" style="color: var(--primary-color); font-size: 1.1em;">0</strong></span>
+                <button class="btn btn-excel" onclick="exportExcelTab1()">📊 Xuất Báo cáo XML (.XLSX)</button>
+            </div>
+
+            <div class="progress-container" id="progressBox1">
+                <div class="progress-bar" id="progressBar1">0%</div>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 50px; text-align: center;">STT</th>
+                            <th>Tên thư mục</th>
+                            <th>Tên File XML</th>
+                            <th>Mã xã</th>
+                            <th>Tên xã</th>
+                            <th>Số tờ đồ</th>
+                            <th>Số thửa</th>
+                            <th>Khóa liên kết (Tờ_Thửa)</th>
+                            <th>Chuỗi dữ liệu</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fileTableBody1"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: ĐỐI SOÁT LỌC TỆP DỮ LIỆU -->
+    <div id="tab2" class="tab-content">
+        <div class="upload-options">
+            <div class="upload-area" onclick="document.getElementById('excelInput2').click()">
+                <h3>📊 Nạp 1 hoặc nhiều tệp Excel / CSV Đối soát</h3>
+                <p>Hỗ trợ nạp các file danh sách Excel (.xlsx, .xls, .csv) để so sánh khóa tờ thửa với Tab 1</p>
+                <input type="file" id="excelInput2" multiple accept=".xlsx, .xls, .csv" style="display: none;">
+            </div>
+        </div>
+
+        <div id="mainSection2" style="display: none;">
+            <!-- THANH ĐIỀU KIỆN LỌC ĐỐI SOÁT -->
+            <div class="filter-panel">
+                <div class="form-group">
+                    <label for="selectSheet">Chọn Sheet Excel:</label>
+                    <select id="selectSheet" onchange="processExcelMatching()"></select>
+                </div>
+
+                <div class="form-group">
+                    <label for="selectToCol">Cột Số tờ (Excel):</label>
+                    <select id="selectToCol" onchange="processExcelMatching()"></select>
+                </div>
+
+                <div class="form-group">
+                    <label for="selectThuaCol">Cột Số thửa (Excel):</label>
+                    <select id="selectThuaCol" onchange="processExcelMatching()"></select>
+                </div>
+
+                <div class="form-group">
+                    <label for="filterCondition">Điều kiện hiển thị:</label>
+                    <select id="filterCondition" onchange="renderTab2Data()">
+                        <option value="ALL">--- Tất cả kết quả đối soát ---</option>
+                        <option value="MATCHED">✅ Chỉ lấy dữ liệu TRÙNG KHỚP (Có trong tệp Excel)</option>
+                        <option value="UNMATCHED">❌ Chỉ lấy dữ liệu KHÔNG TRÙNG KHỚP (Không có trong Excel)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><input type="checkbox" id="chkDedup" onchange="renderTab2Data()"> Loại bỏ trùng lặp Khóa Tờ_Thửa</label>
+                </div>
+            </div>
+
+            <div class="summary-bar">
+                <div>
+                    <span>Tổng Tab 1: <strong id="cntTab1">0</strong> | </span>
+                    <span style="color: var(--success-color);">Trùng khớp: <strong id="cntMatched">0</strong> | </span>
+                    <span style="color: var(--danger-color);">Không trùng: <strong id="cntUnmatched">0</strong></span>
+                </div>
+                <button class="btn btn-excel" onclick="exportExcelTab2()">📊 Kết xuất Báo cáo Đối soát (.XLSX)</button>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 50px; text-align: center;">STT</th>
+                            <th>Trạng thái đối soát</th>
+                            <th>Khóa liên kết (Tờ_Thửa)</th>
+                            <th>Tên File XML (Tab 1)</th>
+                            <th>Tên thư mục</th>
+                            <th>Mã xã</th>
+                            <th>Tên xã</th>
+                            <th>Số tờ đồ</th>
+                            <th>Số thửa</th>
+                            <th>Thông tin dòng khớp (Excel Tab 2)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fileTableBody2"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    Nguồn: Phòng CSDL - VPĐK An Giang
+</footer>
+
+<script>
+    // BẢNG DANH SÁCH MÃ ĐƠN VỊ HÀNH CHÍNH (DVHC) XÃ/PHƯỜNG AN GIANG & KIÊN GIANG
+    const dvhcDict = {
+        "31105": "Đặc khu Thổ Châu", "31078": "Đặc khu Phú Quốc", "31108": "Đặc khu Kiên Hải", "30742": "Phường Rạch Giá",
+        "30760": "Phường Vĩnh Thông", "30817": "xã Hòn Đất", "30823": "xã Bình Sơn", "30826": "xã Bình Giang",
+        "30838": "xã Mỹ Thuận", "30835": "xã Sơn Kiên", "30769": "Phường Hà Tiên", "30781": "Xã Tiên Hải",
+        "30766": "Phường Tô Châu", "30790": "xã Hòa Điền", "30787": "xã Kiên Lương", "30811": "Xã Sơn Hải",
+        "30814": "Xã Hòn Nghệ", "30850": "Xã Tân Hiệp", "30874": "Xã Thạnh Đông", "30856": "Xã Tân Hội",
+        "30886": "Xã Thạnh Lộc", "30880": "Xã Châu Thành", "30898": "Xã Bình An", "30904": "Xã Giồng Riềng",
+        "30910": "Xã Thạnh Hưng", "30943": "Xã Long Thạnh", "30934": "Xã Hòa Hưng", "30928": "Xã Ngọc Chúc",
+        "30949": "Xã Hòa Thuận", "30958": "Xã Định Hòa", "30952": "Xã Gò Quao", "30970": "Xã Vĩnh Hòa Hưng",
+        "30982": "Xã Vĩnh Tuy", "30988": "Xã Tây Yên", "31006": "Xã Đông Thái", "30985": "Xã An Biên",
+        "31024": "Xã Đông Hòa", "31031": "Xã Tân Thạnh", "31018": "Xã An Minh", "31042": "Xã Vân Khánh",
+        "31036": "Xã Đông Hưng", "31064": "Xã Vĩnh Bình", "31069": "Xã Vĩnh Thuận", "31051": "Xã Vĩnh Phong",
+        "31012": "Xã Vĩnh Hòa", "31027": "Xã U Minh Thượng", "30793": "Xã Vĩnh Điều", "30796": "Xã Giang Thành",
+        "30307": "Phường Long Xuyên", "30292": "Phường Bình Đức", "30301": "Phường Mỹ Thới", "30313": "Xã Mỹ Hòa Hưng",
+        "30316": "Phường Châu Đốc", "30325": "Phường Vĩnh Tế", "30337": "Xã An Phú", "30367": "Xã Vĩnh Hậu",
+        "30346": "Xã Nhơn Hội", "30341": "Xã Khánh Bình", "30352": "Xã Phú Hữu", "30388": "Xã Tân An",
+        "30403": "Xã Châu Phong", "30385": "Xã Vĩnh Xương", "30376": "Phường Tân Châu", "30377": "Phường Long Phú",
+        "30406": "Xã Phú Tân", "30436": "Xã Phú An", "30445": "Xã Bình Thạnh Đông", "30409": "Xã Chợ Vàm",
+        "30430": "Xã Hòa Lạc", "30421": "Xã Phú Lâm", "30463": "Xã Châu Phú", "30469": "Xã Mỹ Đức",
+        "30478": "Xã Vĩnh Thạnh Trung", "30487": "Xã Bình Mỹ", "30481": "Xã Thạnh Mỹ Tây", "30526": "Xã An Cư",
+        "30538": "Xã Núi Cấm", "30520": "Phường Tịnh Biên", "30502": "Phường Thới Sơn", "30505": "Phường Chi Lăng",
+        "30547": "Xã Ba Chúc", "30544": "Xã Tri Tôn", "30577": "Xã Ô Lâm", "30580": "Xã Cô Tô",
+        "30568": "Xã Vĩnh Gia", "30589": "Xã An Châu", "30607": "Xã Bình Hòa", "30595": "Xã Cần Đăng",
+        "30619": "Xã Vĩnh Hanh", "30604": "Xã Vĩnh An", "30628": "Xã Chợ Mới", "30643": "Xã Cù Lao Giêng",
+        "30673": "Xã Hội An", "30631": "Xã Long Điền", "30658": "Xã Nhơn Mỹ", "30664": "Xã Long Kiến",
+        "30682": "Xã Thoại Sơn", "30688": "Xã Óc Eo", "30709": "Xã Định Mỹ", "30685": "Xã Phú Hòa",
+        "30697": "Xã Vĩnh Trạch", "30691": "Xã Tây Phú"
+    };
+
+    // BIẾN TOÀN CỤC CHỨA DỮ LIỆU TAB 1 VÀ TAB 2
+    let recordListTab1 = []; 
+    let excelRawWorkbook = null;
+    let excelRawDataRows = [];
+    let matchedResultTab2 = [];
+
+    // CHUYỂN ĐỔI TAB CHỨC NĂNG
+    function switchTab(tabId) {
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+        if (tabId === 'tab1') {
+            document.querySelectorAll('.nav-tab')[0].classList.add('active');
+            document.getElementById('tab1').classList.add('active');
+        } else {
+            document.querySelectorAll('.nav-tab')[1].classList.add('active');
+            document.getElementById('tab2').classList.add('active');
+            if (recordListTab1.length > 0 && excelRawDataRows.length > 0) {
+                processExcelMatching();
+            }
+        }
+    }
+
+    // --- XỬ LÝ DỮ LIỆU TAB 1 (QUÉT XML THƯ MỤC) ---
+    document.getElementById('folderInput1').addEventListener('change', handleFileSelection1);
+    document.getElementById('fileInput1').addEventListener('change', handleFileSelection1);
+
+    function parseFileNameInfo(fileName) {
+        const cleanName = fileName.replace(/\.xml$/i, '').trim();
+        const pattern = /^(?:DD-)?(\d{5})-(\d+)-(\d+)-([A-Za-f0-9]+)$/i;
+        const match = cleanName.match(pattern);
+
+        if (match) {
+            return {
+                maXa: match[1],
+                soTo: match[2],
+                soThua: match[3],
+                chuoiDuLieu: match[4],
+                keyToThua: `${match[2]}_${match[3]}`
+            };
+        }
+
+        const parts = cleanName.split('-');
+        if (parts.length >= 4) {
+            const possibleMaXa = parts[0].toUpperCase() === 'DD' ? parts[1] : parts[0];
+            const offset = parts[0].toUpperCase() === 'DD' ? 1 : 0;
+            const toVal = parts[offset + 1] || '0';
+            const thuaVal = parts[offset + 2] || '0';
+            return {
+                maXa: possibleMaXa || 'N/A',
+                soTo: toVal,
+                soThua: thuaVal,
+                chuoiDuLieu: parts.slice(offset + 3).join('-') || 'N/A',
+                keyToThua: `${toVal}_${thuaVal}`
+            };
+        }
+
+        return {
+            maXa: 'N/A', soTo: '0', soThua: '0', chuoiDuLieu: cleanName, keyToThua: '0_0'
+        };
+    }
+
+    async function handleFileSelection1(e) {
+        const inputFiles = e.target.files;
+        if (!inputFiles || inputFiles.length === 0) return;
+
+        const totalRaw = inputFiles.length;
+        recordListTab1 = [];
+        document.getElementById('fileTableBody1').innerHTML = '';
+        document.getElementById('mainSection1').style.display = 'block';
+
+        const progressBox = document.getElementById('progressBox1');
+        const progressBar = document.getElementById('progressBar1');
+        progressBox.style.display = 'block';
+
+        const chunkSize = 5000;
+        let processedCount = 0;
+
+        for (let i = 0; i < totalRaw; i += chunkSize) {
+            const end = Math.min(i + chunkSize, totalRaw);
+            const fragment = document.createDocumentFragment();
+
+            for (let k = i; k < end; k++) {
+                const fileObj = inputFiles[k];
+                const fileName = fileObj.name;
+
+                if (!fileName.toLowerCase().endsWith('.xml')) continue;
+
+                let folderName = 'Thư mục gốc';
+                if (fileObj.webkitRelativePath) {
+                    const pathSegments = fileObj.webkitRelativePath.split('/');
+                    if (pathSegments.length > 1) folderName = pathSegments[pathSegments.length - 2];
+                }
+
+                const parsedInfo = parseFileNameInfo(fileName);
+                const tenXa = dvhcDict[parsedInfo.maXa] || (parsedInfo.maXa !== 'N/A' ? `Mã xã ${parsedInfo.maXa}` : 'Chưa xác định');
+
+                processedCount++;
+
+                const item = {
+                    stt: processedCount,
+                    folderName: folderName,
+                    fileName: fileName,
+                    maXa: parsedInfo.maXa,
+                    tenXa: tenXa,
+                    soTo: parsedInfo.soTo,
+                    soThua: parsedInfo.soThua,
+                    keyToThua: parsedInfo.keyToThua,
+                    chuoiDuLieu: parsedInfo.chuoiDuLieu
+                };
+
+                recordListTab1.push(item);
+
+                if (processedCount <= 1500) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="text-align: center;">${item.stt}</td>
+                        <td><strong style="color: var(--primary-color);">${item.folderName}</strong></td>
+                        <td><strong>${item.fileName}</strong></td>
+                        <td><code>${item.maXa}</code></td>
+                        <td>${item.tenXa}</td>
+                        <td>${item.soTo}</td>
+                        <td>${item.soThua}</td>
+                        <td><span class="badge badge-success">${item.keyToThua}</span></td>
+                        <td style="font-family: monospace; font-size: 0.85em; color: #555;">${item.chuoiDuLieu}</td>
+                    `;
+                    fragment.appendChild(tr);
+                }
+            }
+
+            if (processedCount <= 1500 && fragment.children.length > 0) {
+                document.getElementById('fileTableBody1').appendChild(fragment);
+            }
+
+            document.getElementById('totalFiles1').textContent = processedCount.toLocaleString('vi-VN');
+            let percent = Math.round((end / totalRaw) * 100);
+            progressBar.style.width = `${percent}%`;
+            progressBar.textContent = `${percent}% (${processedCount.toLocaleString('vi-VN')} tệp XML)`;
+
+            await new Promise(resolve => setTimeout(resolve, 0));
+        }
+
+        if (processedCount > 1500) {
+            const trNotice = document.createElement('tr');
+            trNotice.innerHTML = `<td colspan="9" style="text-align: center; font-weight: bold; padding: 12px; background: #e2e3e5; color: #383d41;">
+                ⚠️ Đã hiển thị xem trước 1.500 dòng đầu tiên trên giao diện Tab 1. Toàn bộ ${processedCount.toLocaleString('vi-VN')} dòng dữ liệu đã sẵn sàng để Xuất file Excel hoặc Sang Tab 2 Đối soát!
+            </td>`;
+            document.getElementById('fileTableBody1').appendChild(trNotice);
+        }
+
+        setTimeout(() => { progressBox.style.display = 'none'; }, 500);
+    }
+
+    function exportExcelTab1() {
+        if (recordListTab1.length === 0) {
+            alert("Chưa có dữ liệu Tab 1 để xuất Excel!");
+            return;
+        }
+
+        const exportData = recordListTab1.map(item => ({
+            "STT": item.stt,
+            "Tên thư mục": item.folderName,
+            "Tên File XML": item.fileName,
+            "Mã xã": item.maXa,
+            "Tên xã": item.tenXa,
+            "Số tờ đồ": item.soTo,
+            "Số thửa": item.soThua,
+            "Khóa liên kết (Tờ_Thửa)": item.keyToThua,
+            "Chuỗi dữ liệu": item.chuoiDuLieu
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const range = XLSX.utils.decode_range(worksheet['!ref']);
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            const address = XLSX.utils.encode_cell({ r: 0, c: C });
+            if (!worksheet[address]) continue;
+            worksheet[address].s = {
+                fill: { fgColor: { rgb: "0056B3" } },
+                font: { bold: true, color: { rgb: "FFFFFF" } },
+                alignment: { horizontal: "center", vertical: "center" }
+            };
+        }
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Quet_XML_Tab1");
+        XLSX.writeFile(workbook, "BaoCao_QuetDuLieu_Tab1.xlsx");
+    }
+
+    // --- XỬ LÝ DỮ LIỆU TAB 2 (NẠP EXCEL & ĐỐI SOÁT LỌC) ---
+    document.getElementById('excelInput2').addEventListener('change', handleExcelUpload2);
+
+    async function handleExcelUpload2(e) {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        if (recordListTab1.length === 0) {
+            alert("⚠️ Lưu ý: Vui lòng thực hiện Quét dữ liệu XML ở Tab 1 trước khi đối soát!");
+        }
+
+        document.getElementById('mainSection2').style.display = 'block';
+        
+        // Đọc tệp Excel đầu tiên để thiết lập cột ghép
+        const firstFile = files[0];
+        const dataBuffer = await firstFile.arrayBuffer();
+        excelRawWorkbook = XLSX.read(dataBuffer, { type: 'array' });
+
+        // Cập nhật danh sách Sheets
+        const selectSheet = document.getElementById('selectSheet');
+        selectSheet.innerHTML = '';
+        excelRawWorkbook.SheetNames.forEach(sheetName => {
+            const opt = document.createElement('option');
+            opt.value = sheetName;
+            opt.textContent = sheetName;
+            selectSheet.appendChild(opt);
+        });
+
+        loadSheetColumns();
+    }
+
+    function loadSheetColumns() {
+        const sheetName = document.getElementById('selectSheet').value;
+        if (!excelRawWorkbook || !sheetName) return;
+
+        const worksheet = excelRawWorkbook.Sheets[sheetName];
+        excelRawDataRows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+        if (excelRawDataRows.length === 0) {
+            alert("Sheet được chọn không có dữ liệu!");
+            return;
+        }
+
+        // Tự động quét danh sách tên cột
+        const firstRow = excelRawDataRows[0];
+        const colNames = Object.keys(firstRow);
+
+        const selectToCol = document.getElementById('selectToCol');
+        const selectThuaCol = document.getElementById('selectThuaCol');
+
+        selectToCol.innerHTML = '';
+        selectThuaCol.innerHTML = '';
+
+        colNames.forEach(col => {
+            const opt1 = document.createElement('option');
+            opt1.value = col; opt1.textContent = col;
+            if (/tờ|to|soTo|toBanDo/i.test(col)) opt1.selected = true;
+            selectToCol.appendChild(opt1);
+
+            const opt2 = document.createElement('option');
+            opt2.value = col; opt2.textContent = col;
+            if (/thửa|thua|soThua/i.test(col)) opt2.selected = true;
+            selectThuaCol.appendChild(opt2);
+        });
+
+        processExcelMatching();
+    }
+
+    // THUẬT TOÁN ĐỐI SOÁT GHÉP KHÓA TỜ_THỬA CỰC NHANH (HASH MAP)
+    function processExcelMatching() {
+        if (recordListTab1.length === 0 || excelRawDataRows.length === 0) return;
+
+        const toColName = document.getElementById('selectToCol').value;
+        const thuaColName = document.getElementById('selectThuaCol').value;
+
+        // 1. Tạo Map Hash cho Dữ liệu Excel Tab 2 để đối soát O(1)
+        const excelKeyMap = new Map();
+        excelRawDataRows.forEach(row => {
+            const toVal = String(row[toColName] || '').trim();
+            const thuaVal = String(row[thuaColName] || '').trim();
+            if (toVal && thuaVal) {
+                const key = `${toVal}_${thuaVal}`;
+                if (!excelKeyMap.has(key)) {
+                    excelKeyMap.set(key, row);
+                }
+            }
+        });
+
+        // 2. Thực hiện ghép khoá với dữ liệu Tab 1
+        matchedResultTab2 = [];
+        let matchedCount = 0;
+        let unmatchedCount = 0;
+
+        recordListTab1.forEach(item1 => {
+            const isMatched = excelKeyMap.has(item1.keyToThua);
+            if (isMatched) matchedCount++; else unmatchedCount++;
+
+            const matchedExcelRow = isMatched ? excelKeyMap.get(item1.keyToThua) : null;
+            let matchedExcelInfo = '-';
+            if (matchedExcelRow) {
+                matchedExcelInfo = Object.entries(matchedExcelRow).slice(0, 4).map(([k, v]) => `${k}: ${v}`).join(' | ');
+            }
+
+            matchedResultTab2.push({
+                stt: item1.stt,
+                isMatched: isMatched,
+                matchStatusText: isMatched ? 'TRÙNG KHỚP' : 'KHÔNG TRÙNG',
+                keyToThua: item1.keyToThua,
+                fileName: item1.fileName,
+                folderName: item1.folderName,
+                maXa: item1.maXa,
+                tenXa: item1.tenXa,
+                soTo: item1.soTo,
+                soThua: item1.soThua,
+                matchedExcelInfo: matchedExcelInfo
+            });
+        });
+
+        document.getElementById('cntTab1').textContent = recordListTab1.length.toLocaleString('vi-VN');
+        document.getElementById('cntMatched').textContent = matchedCount.toLocaleString('vi-VN');
+        document.getElementById('cntUnmatched').textContent = unmatchedCount.toLocaleString('vi-VN');
+
+        renderTab2Data();
+    }
+
+    // HIỂN THỊ VÀ LỌC BẢNG DỮ LIỆU TAB 2
+    function renderTab2Data() {
+        const filterCond = document.getElementById('filterCondition').value;
+        const isDedup = document.getElementById('chkDedup').checked;
+        const tbody2 = document.getElementById('fileTableBody2');
+        tbody2.innerHTML = '';
+
+        let filteredList = matchedResultTab2.filter(item => {
+            if (filterCond === 'MATCHED') return item.isMatched;
+            if (filterCond === 'UNMATCHED') return !item.isMatched;
+            return true;
+        });
+
+        // Tùy chọn lọc khử trùng lặp Khóa Tờ_Thửa
+        if (isDedup) {
+            const seenKeys = new Set();
+            filteredList = filteredList.filter(item => {
+                if (seenKeys.has(item.keyToThua)) return false;
+                seenKeys.add(item.keyToThua);
+                return true;
+            });
+        }
+
+        const fragment = document.createDocumentFragment();
+        const displayLimit = Math.min(filteredList.length, 1500);
+
+        for (let i = 0; i < displayLimit; i++) {
+            const item = filteredList[i];
+            const badgeClass = item.isMatched ? 'badge-success' : 'badge-danger';
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="text-align: center;">${i + 1}</td>
+                <td><span class="badge ${badgeClass}">${item.matchStatusText}</span></td>
+                <td><strong>${item.keyToThua}</strong></td>
+                <td><strong>${item.fileName}</strong></td>
+                <td><strong style="color: var(--primary-color);">${item.folderName}</strong></td>
+                <td><code>${item.maXa}</code></td>
+                <td>${item.tenXa}</td>
+                <td>${item.soTo}</td>
+                <td>${item.soThua}</td>
+                <td style="font-size: 0.82em; color: #555;">${item.matchedExcelInfo}</td>
+            `;
+            fragment.appendChild(tr);
+        }
+
+        tbody2.appendChild(fragment);
+
+        if (filteredList.length > 1500) {
+            const trNotice = document.createElement('tr');
+            trNotice.innerHTML = `<td colspan="10" style="text-align: center; font-weight: bold; padding: 12px; background: #e2e3e5; color: #383d41;">
+                ⚠️ Đã hiển thị xem trước 1.500 dòng đối soát. Toàn bộ ${filteredList.length.toLocaleString('vi-VN')} dòng theo bộ lọc đã sẵn sàng để Xuất file Excel!
+            </td>`;
+            tbody2.appendChild(trNotice);
+        }
+    }
+
+    // XUẤT EXCEL KẾT QUẢ ĐỐI SOÁT TAB 2
+    function exportExcelTab2() {
+        if (matchedResultTab2.length === 0) {
+            alert("Chưa có kết quả đối soát để xuất Excel!");
+            return;
+        }
+
+        const filterCond = document.getElementById('filterCondition').value;
+        const isDedup = document.getElementById('chkDedup').checked;
+
+        let filteredList = matchedResultTab2.filter(item => {
+            if (filterCond === 'MATCHED') return item.isMatched;
+            if (filterCond === 'UNMATCHED') return !item.isMatched;
+            return true;
+        });
+
+        if (isDedup) {
+            const seenKeys = new Set();
+            filteredList = filteredList.filter(item => {
+                if (seenKeys.has(item.keyToThua)) return false;
+                seenKeys.add(item.keyToThua);
+                return true;
+            });
+        }
+
+        const exportData = filteredList.map((item, idx) => ({
+            "STT": idx + 1,
+            "Trạng thái đối soát": item.matchStatusText,
+            "Khóa liên kết (Tờ_Thửa)": item.keyToThua,
+            "Tên File XML (Tab 1)": item.fileName,
+            "Tên thư mục": item.folderName,
+            "Mã xã": item.maXa,
+            "Tên xã": item.tenXa,
+            "Số tờ đồ": item.soTo,
+            "Số thửa": item.soThua,
+            "Thông tin dòng khớp (Excel Tab 2)": item.matchedExcelInfo
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const range = XLSX.utils.decode_range(worksheet['!ref']);
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            const address = XLSX.utils.encode_cell({ r: 0, c: C });
+            if (!worksheet[address]) continue;
+            worksheet[address].s = {
+                fill: { fgColor: { rgb: "0056B3" } },
+                font: { bold: true, color: { rgb: "FFFFFF" } },
+                alignment: { horizontal: "center", vertical: "center" }
+            };
+        }
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "DoiSoat_Tab2");
+        XLSX.writeFile(workbook, "BaoCao_DoiSoat_LocDuLieu_Tab2.xlsx");
+    }
+</script>
+
+</body>
+</html>
